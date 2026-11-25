@@ -19,6 +19,10 @@ namespace SalvageSprint.Core
             foreach (Candidate candidate in observation.Candidates)
             {
                 // Deliberately naive: ignores Visible, Remembered and Blocked.
+                if (!(candidate.Visible || candidate.Remembered))
+                {
+                    continue;
+                }
                 if (candidate.Available && candidate.DistanceSquared < distance)
                 { nearest = candidate.Id; distance = candidate.DistanceSquared; }
             }
