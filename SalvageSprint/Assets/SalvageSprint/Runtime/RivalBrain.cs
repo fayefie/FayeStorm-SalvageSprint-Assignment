@@ -44,11 +44,11 @@ namespace SalvageSprint
                 navigator.Cancel();
                 return;
             }
-            
+
             TravelStatus travel = navigator.Poll();
-            
+
             if (Time.time < nextDecision) return;
-            
+
             nextDecision = Time.time + decisionInterval;
 
             // If the last navigation attempt failed, remember that pickup ID and ignore it for a while.
@@ -70,20 +70,20 @@ namespace SalvageSprint
                 actor: actor,
                 rememberedId: rememberedId,
                 isBlocked: IsBlocked); // Capture the current observation of the environment.
-            
+
             CurrentFacts = DecisionPolicy.Infer(LastObservation);
-            
+
             Decision next = DecisionPolicy.Choose(CurrentFacts);
 
             // If the decision has changed, log it and update the navigation request.
             bool changed = next.Task != CurrentDecision.Task || next.TargetId != CurrentDecision.TargetId;
             CurrentDecision = next;
             DecisionCount++;
-            
+
             if (changed && logDecisionChanges)
                 Debug.Log($"[{Time.time:F1}] {next.Task} target={next.TargetId}: {next.Reason}", this);
 
-            
+
             if (next.Task == TaskKind.Deliver)
             {
                 rememberedId = -1;
