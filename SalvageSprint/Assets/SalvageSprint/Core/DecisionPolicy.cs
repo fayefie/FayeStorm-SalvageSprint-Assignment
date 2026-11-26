@@ -14,39 +14,21 @@ namespace SalvageSprint.Core
             if (observation.Carrying)
                 return new AgentFacts(true, -1, false);
 
-            int retainedId = observation.CurrentTargetId;
-
-            // retain current target if still valid
-            if (retainedId >= 1)
+            // retain current target as long as it is still eligible (not collected/blocked)
+            foreach (Candidate candidate in observation.Candidates)
             {
-                foreach (Candidate candidate in observation.Candidates)
+                if (candidate.Id == observation.CurrentTargetId && IsEligible(candidate))
                 {
-                    if (candidate.Id == retainedId)
-                    {
-                        // seeks candidate with retained id regardless if a closer object is discovered
-                        if (IsEligible(candidate))
-                        {
-                            return new AgentFacts(false, retainedId, true);
-
-                        }
-
-                        // if the retained target is no longer eligible (e.g. picked up by player), break and seek new object
-                        break;
-                    }
+                    return new AgentFacts(false, candidate.Id, true);
                 }
             }
 
+            // if the previous task is no longer useful, find nearest object and go there
             int nearest = -1;
             float distance = float.PositiveInfinity;
             foreach (Candidate candidate in observation.Candidates)
             {
-                // Deliberately naive: ignores Visible, Remembered and Blocked.
-                if (!IsEligible(candidate))
-                {
-                    continue;
-                }
-
-                if (candidate.DistanceSquared < distance)
+                if (IsEligible(candidate) && candidate.DistanceSquared < distance)
                 {
                     nearest = candidate.Id;
                     distance = candidate.DistanceSquared;
@@ -57,7 +39,7 @@ namespace SalvageSprint.Core
 
         private static bool IsEligible(Candidate candidate)
         {
-            return candidate.Available && (candidate.Visible || candidate.Remembered);
+            return candidate.Available && (candidate.Visible || candidate.Remembered) && !candidate.Blocked;
         }
 
         public static Decision Choose(Observation observation) => Choose(Infer(observation));
